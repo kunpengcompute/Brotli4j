@@ -229,6 +229,11 @@ static BROTLI_INLINE void FN(FindLongestMatch)(
       }
     }
   }
+
+  /* least match len is 3 */
+  if (best_len < 3) {
+    best_len = 3;
+  }
   {
     for (i = init_i; i > down;) {
       size_t prev_ix = bucket[--i & self->block_mask_];
