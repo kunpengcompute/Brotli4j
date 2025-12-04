@@ -998,7 +998,7 @@ static BROTLI_BOOL EncodeData(
     }
   }
 
-  if (fast_compress) {
+  if (BROTLI_PREDICT_FALSE(fast_compress)) {
     uint8_t* storage;
     size_t storage_ix = s->last_bytes_bits_;
     size_t table_size;
@@ -1067,7 +1067,7 @@ static BROTLI_BOOL EncodeData(
     ExtendLastCommand(s, &bytes, &wrapped_last_processed_pos);
   }
 
-  if (s->params.quality == ZOPFLIFICATION_QUALITY) {
+  if (BROTLI_PREDICT_FALSE(s->params.quality == ZOPFLIFICATION_QUALITY)) {
     BROTLI_DCHECK(s->params.hasher.type == 10);
     BrotliCreateZopfliBackwardReferences(m, bytes, wrapped_last_processed_pos,
         data, mask, literal_context_lut, &s->params,
@@ -1075,7 +1075,7 @@ static BROTLI_BOOL EncodeData(
         &s->last_insert_len_, &s->commands_[s->num_commands_],
         &s->num_commands_, &s->num_literals_);
     if (BROTLI_IS_OOM(m)) return BROTLI_FALSE;
-  } else if (s->params.quality == HQ_ZOPFLIFICATION_QUALITY) {
+  } else if (BROTLI_PREDICT_FALSE(s->params.quality == HQ_ZOPFLIFICATION_QUALITY)) {
     BROTLI_DCHECK(s->params.hasher.type == 10);
     BrotliCreateHqZopfliBackwardReferences(m, bytes, wrapped_last_processed_pos,
         data, mask, literal_context_lut, &s->params,
