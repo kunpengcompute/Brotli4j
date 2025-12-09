@@ -6,6 +6,7 @@
 
 /* Entropy encoding (Huffman) utilities. */
 
+#include <arm_neon.h>
 #include "entropy_encode.h"
 
 #include <string.h>  /* memset */
@@ -150,15 +151,41 @@ void BrotliCreateHuffmanTree(const uint32_t* data,
   }
 }
 
-static void Reverse(uint8_t* v, size_t start, size_t end) {
-  --end;
-  while (start < end) {
-    uint8_t tmp = v[start];
-    v[start] = v[end];
-    v[end] = tmp;
-    ++start;
-    --end;
-  }
+void Reverse(uint8_t* v, size_t start, size_t end) {
+    if (start >= end) return;
+    size_t left = start;
+    size_t right = end - 1;
+
+    const uint8_t rev_indices[] = {
+        15, 14, 13, 12, 11, 10, 9, 8, 
+        7, 6, 5, 4, 3, 2, 1, 0
+    };
+    const uint8x16_t v_rev_idx = vld1q_u8(rev_indices);
+
+    while (right > left + 31) {
+        uint8x16_t v_left = vld1q_u8(v + left);
+        uint8x16_t v_right = vld1q_u8(v + right - 15);
+
+        // 寄存器内反转 (Shuffle)
+        uint8x16_t v_left_rev = vqtbl1q_u8(v_left, v_rev_idx);
+        uint8x16_t v_right_rev = vqtbl1q_u8(v_right, v_rev_idx);
+
+        // 交叉存储
+        vst1q_u8(v + right - 15, v_left_rev);
+        vst1q_u8(v + left, v_right_rev);
+
+        
+        left += 16;
+        right -= 16;
+    }
+
+    while (left < right) {
+        uint8_t tmp = v[left];
+        v[left] = v[right];
+        v[right] = tmp;
+        ++left;
+        --right;
+    }
 }
 
 static void BrotliWriteHuffmanTreeRepetitions(

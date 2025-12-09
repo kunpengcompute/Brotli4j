@@ -574,12 +574,29 @@ static BROTLI_INLINE void FindCompoundDictionaryMatch(
       }
     }
   }
+  // huawei added
+  size_t countccz=0;
+  uint32_t item2 = item;
+  uint32_t *chain2 = chain;
+  while (item2 == 0) {
+    item2=(*chain2) & 0x80000000;
+    chain2++;
+    countccz++;
+  }
+
   while (item == 0) {
     size_t offset;
     size_t distance;
     size_t limit;
+    // huawei added
+    size_t distanceccz=countccz<5?countccz:5;
+    countccz--;
+
     item = *chain;
     chain++;
+    // huawei added
+    __builtin_prefetch(&source[(*(chain+distanceccz-1) & 0x7FFFFFFF) + best_len], 0, 0);
+
     offset = item & 0x7FFFFFFF;
     item &= 0x80000000;
     distance = distance_offset - offset;
