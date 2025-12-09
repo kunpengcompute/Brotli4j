@@ -24,6 +24,7 @@
 #include "fast_log.h"
 #include "find_match_length.h"
 #include "write_bits.h"
+#include <arm_neon.h>
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
@@ -68,6 +69,7 @@ static BROTLI_INLINE BROTLI_BOOL IsMatch(const uint8_t* p1, const uint8_t* p2) {
    and thus have to assign a non-zero depth for each literal.
    Returns estimated compression ratio millibytes/char for encoding given input
    with generated code. */
+  //  为“literal 字节（0~255）”构建 Huffman 前缀码，并把构建好的 Huffman 树写入输出比特流中。
 static size_t BuildAndStoreLiteralPrefixCode(BrotliOnePassArena* s,
                                              const uint8_t* input,
                                              const size_t input_size,
@@ -85,29 +87,54 @@ static size_t BuildAndStoreLiteralPrefixCode(BrotliOnePassArena* s,
       ++histogram[input[i]];
     }
     histogram_total = input_size;
-    for (i = 0; i < 256; ++i) {
-      /* We weigh the first 11 samples with weight 3 to account for the
-         balancing effect of the LZ77 phase on the histogram. */
-      const uint32_t adjust = 2 * BROTLI_MIN(uint32_t, histogram[i], 11u);
-      histogram[i] += adjust;
-      histogram_total += adjust;
+    // for (i = 0; i < 256; ++i) {
+    //   /* We weigh the first 11 samples with weight 3 to account for the
+    //      balancing effect of the LZ77 phase on the histogram. */
+    //   const uint32_t adjust = 2 * BROTLI_MIN(uint32_t, histogram[i], 11u);
+    //   histogram[i] += adjust;
+    //   histogram_total += adjust;
+    // }
+    uint32x4_t v_sum = vdupq_n_u32(0);
+    const uint32x4_t v11 = vdupq_n_u32(11u);
+    const uint32x4_t v1 = vdupq_n_u32(1u);
+    for (i=0; i + 4 <= 256; i += 4) {
+        uint32x4_t v = vld1q_u32(&histogram[i]);
+        uint32x4_t vmin = vminq_u32(v, v11);
+        uint32x4_t vadj = vaddq_u32(v1, vshlq_n_u32(vmin, 1));
+        uint32x4_t vnew = vaddq_u32(v, vadj);
+        vst1q_u32(&histogram[i], vnew);
+        v_sum = vaddq_u32(v_sum, vadj);
     }
+    histogram_total = vaddvq_u32(v_sum);
   } else {
     static const size_t kSampleRate = 29;
     for (i = 0; i < input_size; i += kSampleRate) {
       ++histogram[input[i]];
     }
     histogram_total = (input_size + kSampleRate - 1) / kSampleRate;
-    for (i = 0; i < 256; ++i) {
-      /* We add 1 to each population count to avoid 0 bit depths (since this is
-         only a sample and we don't know if the symbol appears or not), and we
-         weigh the first 11 samples with weight 3 to account for the balancing
-         effect of the LZ77 phase on the histogram (more frequent symbols are
-         more likely to be in backward references instead as literals). */
-      const uint32_t adjust = 1 + 2 * BROTLI_MIN(uint32_t, histogram[i], 11u);
-      histogram[i] += adjust;
-      histogram_total += adjust;
+    // for (i = 0; i < 256; ++i) {
+    //   /* We add 1 to each population count to avoid 0 bit depths (since this is
+    //      only a sample and we don't know if the symbol appears or not), and we
+    //      weigh the first 11 samples with weight 3 to account for the balancing
+    //      effect of the LZ77 phase on the histogram (more frequent symbols are
+    //      more likely to be in backward references instead as literals). */
+    //   const uint32_t adjust = 1 + 2 * BROTLI_MIN(uint32_t, histogram[i], 11u);
+    //   histogram[i] += adjust;
+    //   histogram_total += adjust;
+    // }
+
+    uint32x4_t v_sum = vdupq_n_u32(0);
+    const uint32x4_t v11 = vdupq_n_u32(11u);
+    const uint32x4_t v1 = vdupq_n_u32(1u);
+    for (i=0; i + 4 <= 256; i += 4) {
+        uint32x4_t v = vld1q_u32(&histogram[i]);
+        uint32x4_t vmin = vminq_u32(v, v11);
+        uint32x4_t vadj = vaddq_u32(v1, vshlq_n_u32(vmin, 1));
+        uint32x4_t vnew = vaddq_u32(v, vadj);
+        vst1q_u32(&histogram[i], vnew);
+        v_sum = vaddq_u32(v_sum, vadj);
     }
+    histogram_total = vaddvq_u32(v_sum);
   }
   BrotliBuildAndStoreHuffmanTreeFast(s->tree, histogram, histogram_total,
                                      /* max_bits = */ 8,
@@ -426,6 +453,7 @@ static uint32_t kCmdHistoSeed[128] = {
   1, 1, 1, 1, 0, 0, 0, 0,
 };
 
+// 描输入数据，寻找匹配项，并处理字面量，快速生成压缩后的输出
 static BROTLI_INLINE void BrotliCompressFragmentFastImpl(
     BrotliOnePassArena* s, const uint8_t* input, size_t input_size,
     BROTLI_BOOL is_last, int* table, size_t table_bits,
@@ -761,6 +789,7 @@ void BrotliCompressFragmentFast(
   const size_t initial_storage_ix = *storage_ix;
   const size_t table_bits = Log2FloorNonZero(table_size);
 
+// 如果输入数据大小 input_size 为 0，且 is_last 为真，表示这是最后一个块且没有数据。
   if (input_size == 0) {
     BROTLI_DCHECK(is_last);
     BrotliWriteBits(1, 1, storage_ix, storage);  /* islast */
