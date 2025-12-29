@@ -548,7 +548,7 @@ static BROTLI_INLINE void FindCompoundDictionaryMatch(
     source = (const uint8_t*)BROTLI_UNALIGNED_LOAD_PTR((const uint8_t**)tail);
   }
 
-  for (i = 0; i < 4; ++i) {
+  for (i = 0; i < FAST_SEARCH_IN_DISTANCECACHE_CACHE; ++i) {
     const size_t distance = (size_t)distance_cache[i];
     size_t offset;
     size_t limit;
