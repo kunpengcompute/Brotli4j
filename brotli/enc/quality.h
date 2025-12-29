@@ -29,6 +29,8 @@
 #define MIN_QUALITY_FOR_HQ_CONTEXT_MODELING 7
 #define MIN_QUALITY_FOR_HQ_BLOCK_SPLITTING 10
 
+#define FAST_SEARCH_IN_DISTANCECACHE_CACHE 2
+
 /* For quality below MIN_QUALITY_FOR_BLOCK_SPLIT there is no block splitting,
    so we buffer at most this much literals and commands. */
 #define MAX_NUM_DELAYED_SYMBOLS 0x2FFF
@@ -169,7 +171,7 @@ static BROTLI_INLINE void ChooseHasher(const BrotliEncoderParams* params,
     hparams->block_bits = params->quality - 1;
     hparams->bucket_bits = 15;
     hparams->num_last_distances_to_check =
-        params->quality < 7 ? 4 : params->quality < 9 ? 10 : 16;
+        params->quality < 7 ? FAST_SEARCH_IN_DISTANCECACHE_CACHE : params->quality < 9 ? 10 : 16;
   } else {
     /* TODO(eustas): often previous setting (H6) is faster and denser; consider
                      adding an option to use it. */
@@ -177,7 +179,7 @@ static BROTLI_INLINE void ChooseHasher(const BrotliEncoderParams* params,
     hparams->block_bits = params->quality - 1;
     hparams->bucket_bits = params->quality < 7 ? 14 : 15;
     hparams->num_last_distances_to_check =
-        params->quality < 7 ? 4 : params->quality < 9 ? 10 : 16;
+        params->quality < 7 ? FAST_SEARCH_IN_DISTANCECACHE_CACHE : params->quality < 9 ? 10 : 16;
   }
 
   if (params->lgwin > 24) {

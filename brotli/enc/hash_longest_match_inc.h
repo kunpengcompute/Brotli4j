@@ -117,6 +117,7 @@ static BROTLI_INLINE void FN(StoreRange)(HashLongestMatch* BROTLI_RESTRICT self,
     const uint8_t* BROTLI_RESTRICT data, const size_t mask,
     const size_t ix_start, const size_t ix_end) {
   size_t i;
+#ifdef __aarch64__
   const size_t ix_end2 = ix_start + ((ix_end - ix_start) & (~0x3L));
   for (i = ix_start; i < ix_end2; i += 4) {
     FN(Store)(self, data, mask, i);
@@ -125,6 +126,9 @@ static BROTLI_INLINE void FN(StoreRange)(HashLongestMatch* BROTLI_RESTRICT self,
     FN(Store)(self, data, mask, i + 3);
   }
   for (; i < ix_end; i++) {
+#else
+  for (i = ix_start; i < ix_end; ++i) {
+#endif
     FN(Store)(self, data, mask, i);
   }
 }
@@ -179,6 +183,7 @@ static BROTLI_INLINE void FN(FindLongestMatch)(
   out->len = 0;
   out->len_code_delta = 0;
   /* Try last distance first. */
+#ifdef __aarch64__
   __builtin_prefetch(&data[cur_ix_masked + best_len], 0, 3);
     const uint32_t key =
         FN(HashBytes)(&data[cur_ix_masked], self->hash_shift_);
@@ -190,6 +195,9 @@ static BROTLI_INLINE void FN(FindLongestMatch)(
   const size_t num_last_dist_to_check = (size_t)self->num_last_distances_to_check_;
     const size_t init_i =  num[key];
   for (i = 0; i < num_last_dist_to_check; ++i) {
+#else
+  for (i = 0; i < (size_t)self->num_last_distances_to_check_; ++i) {
+#endif
     const size_t backward = (size_t)distance_cache[i];
     size_t prev_ix = (size_t)(cur_ix - backward);
     if (prev_ix >= cur_ix) {
@@ -229,13 +237,22 @@ static BROTLI_INLINE void FN(FindLongestMatch)(
       }
     }
   }
-
+#ifdef __aarch64__
   /* least match len is 3 */
   if (best_len < 3) {
     best_len = 3;
   }
   {
     for (i = init_i; i > down;) {
+#else
+  {
+    const uint32_t key =	
+        FN(HashBytes)(&data[cur_ix_masked], self->hash_shift_);
+    uint32_t* BROTLI_RESTRICT bucket = &buckets[key << self->block_bits_];
+    const size_t down =
+        (num[key] > self->block_size_) ? (num[key] - self->block_size_) : 0u;
+    for (i = num[key]; i > down;) {
+#endif
       size_t prev_ix = bucket[--i & self->block_mask_];
       const size_t backward = cur_ix - prev_ix;
       if (BROTLI_PREDICT_FALSE(backward > max_backward)) {
@@ -270,11 +287,13 @@ static BROTLI_INLINE void FN(FindLongestMatch)(
     bucket[num[key] & self->block_mask_] = (uint32_t)cur_ix;
     ++num[key];
   }
-  /* if (min_score == out->score) {
+#ifndef __aarch64__
+  if (min_score == out->score) {
     SearchInStaticDictionary(dictionary,
         self->common_, &data[cur_ix_masked], max_length, dictionary_distance,
         max_distance, out, BROTLI_FALSE);
-  } */
+  }
+#endif
 }
 
 #undef HashLongestMatch
