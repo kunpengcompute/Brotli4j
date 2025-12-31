@@ -19,6 +19,34 @@
 static BROTLI_INLINE size_t FN(HashTypeLength)(void) { return 4; }
 static BROTLI_INLINE size_t FN(StoreLookahead)(void) { return 4; }
 
+#define MASK_KEY 0x00000000
+#define MASK_CHECK 0xFFFFFFFF
+
+#include <arm_neon.h>
+#include <arm_acle.h>
+
+static BROTLI_INLINE uint32_t FN(ComputeKey)(
+    const uint8_t* BROTLI_RESTRICT data, const int shift) {
+  uint32_t h = BROTLI_UNALIGNED_LOAD32LE(data) * kHashMul32;
+  return (uint32_t)(h >> shift);
+}
+
+static BROTLI_INLINE uint32_t FN(ComputeCheck)(
+    const uint8_t* BROTLI_RESTRICT data, uint32_t mask) {
+  uint32_t h = __crc32cw(BROTLI_UNALIGNED_LOAD32LE(data), mask);
+
+  return h;
+}
+
+static BROTLI_INLINE BROTLI_BOOL FN(IsValidCandidate)(
+    int32_t candidate_ix, size_t cur_ix, size_t max_backward, size_t backward) {
+  if (BROTLI_PREDICT_FALSE(backward > max_backward || (size_t)candidate_ix >= cur_ix)) {
+    return BROTLI_FALSE;
+  }
+  return BROTLI_TRUE;
+}
+
+
 /* HashBytes is the function that chooses the bucket to place the address in. */
 static uint32_t FN(HashBytes)(
     const uint8_t* BROTLI_RESTRICT data, const int shift) {
@@ -106,11 +134,12 @@ static BROTLI_INLINE void FN(Store)(
     const size_t mask, const size_t ix) {
   uint16_t* BROTLI_RESTRICT num = self->num_;
   uint32_t* BROTLI_RESTRICT buckets = self->buckets_;
-  const uint32_t key = FN(HashBytes)(&data[ix & mask], self->hash_shift_);
+  uint32_t key = FN(ComputeKey)(&data[ix & mask], self->hash_shift_);
+  uint32_t check = FN(ComputeCheck)(&data[ix & mask], MASK_CHECK);
   const size_t minor_ix = num[key] & self->block_mask_;
   const size_t offset = minor_ix + (key << self->block_bits_);
   ++num[key];
-  buckets[offset] = (uint32_t)ix;
+  buckets[offset] = (uint32_t)ix + check;
 }
 
 static BROTLI_INLINE void FN(StoreRange)(HashLongestMatch* BROTLI_RESTRICT self,
@@ -183,10 +212,11 @@ static BROTLI_INLINE void FN(FindLongestMatch)(
   out->len = 0;
   out->len_code_delta = 0;
   /* Try last distance first. */
-#ifdef __aarch64__
+
   __builtin_prefetch(&data[cur_ix_masked + best_len], 0, 3);
-    const uint32_t key =
-        FN(HashBytes)(&data[cur_ix_masked], self->hash_shift_);
+   uint32_t key = FN(ComputeKey)(&data[cur_ix_masked], self->hash_shift_);
+   uint32_t check = FN(ComputeCheck)(&data[cur_ix_masked], MASK_CHECK);
+#ifdef __aarch64__
     __builtin_prefetch(&num[key], 0, 3);
     uint32_t* BROTLI_RESTRICT bucket = &buckets[key << self->block_bits_];
     __builtin_prefetch(bucket, 0, 3);
@@ -253,11 +283,13 @@ static BROTLI_INLINE void FN(FindLongestMatch)(
         (num[key] > self->block_size_) ? (num[key] - self->block_size_) : 0u;
     for (i = num[key]; i > down;) {
 #endif
-      size_t prev_ix = bucket[--i & self->block_mask_];
-      const size_t backward = cur_ix - prev_ix;
-      if (BROTLI_PREDICT_FALSE(backward > max_backward)) {
-        break;
+      uint32_t stored_value = bucket[--i & self->block_mask_];
+      int32_t candidate_ix = (int32_t)stored_value - check;
+      const size_t backward = cur_ix - candidate_ix;
+      if (!FN(IsValidCandidate)(candidate_ix, cur_ix, max_backward, backward)) {
+        continue;
       }
+      size_t prev_ix = (size_t)candidate_ix;
       prev_ix &= ring_buffer_mask;
       if (cur_ix_masked + best_len > ring_buffer_mask ||
           prev_ix + best_len > ring_buffer_mask ||
@@ -284,16 +316,16 @@ static BROTLI_INLINE void FN(FindLongestMatch)(
         }
       }
     }
-    bucket[num[key] & self->block_mask_] = (uint32_t)cur_ix;
+    bucket[num[key] & self->block_mask_] = (uint32_t)cur_ix + check;
     ++num[key];
   }
-#ifndef __aarch64__
-  if (min_score == out->score) {
+
+  if (USE_DICTIONARY && min_score == out->score) {
     SearchInStaticDictionary(dictionary,
         self->common_, &data[cur_ix_masked], max_length, dictionary_distance,
         max_distance, out, BROTLI_FALSE);
   }
-#endif
+
 }
 
 #undef HashLongestMatch
