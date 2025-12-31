@@ -290,7 +290,9 @@ static BROTLI_INLINE size_t BackwardMatchLengthCode(const BackwardMatch* self) {
 #undef HASHER
 
 #define HASHER() H5
+#define USE_DICTIONARY 0
 #include "hash_longest_match_inc.h"  /* NOLINT(build/include) */
+#undef USE_DICTIONARY
 #undef HASHER
 
 #define HASHER() H6
