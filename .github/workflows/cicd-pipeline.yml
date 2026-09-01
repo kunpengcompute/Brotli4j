@@ -25,9 +25,9 @@ jobs:
   MacOS-x86_64-Build-JDK8:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Set up JDK 8
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: 'corretto'
           java-version: 8
@@ -35,7 +35,7 @@ jobs:
       - name: Build with Maven
         run: mvn -B --show-version -ntp clean package --file pom.xml
       - name: Upload the build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: MacOS-x86_64-Build-JDK8
           path: /Users/runner/work/Brotli4j/
@@ -43,9 +43,9 @@ jobs:
   MacOS-x86_64-Build-JDK11:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Set up JDK 11
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: 'corretto'
           java-version: 11
@@ -56,9 +56,9 @@ jobs:
   MacOS-x86_64-Build-JDK17:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Set up JDK 17
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: 'corretto'
           java-version: 17
@@ -69,9 +69,9 @@ jobs:
   MacOS-x86_64-Build-JDK21:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Set up JDK 21
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: 'corretto'
           java-version: 21
@@ -82,11 +82,11 @@ jobs:
   Linux-x86_64-Build-JDK8:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: build centos6
         run: docker compose -f docker/docker-compose.yml run build
       - name: Upload the build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Linux-x86_64-Build-JDK8
           path: /home/runner/work/Brotli4j/
@@ -94,29 +94,29 @@ jobs:
   Linux-x86_64-Build-JDK11:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: build centos6
         run: docker compose -f docker/docker-compose11.yml run build
 
   Linux-x86_64-Build-JDK17:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: build centos6
         run: docker compose -f docker/docker-compose17.yml run build
 
   Linux-x86_64-Build-JDK21:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: build centos6
         run: docker compose -f docker/docker-compose21.yml run build
 
   Linux-Aarch64-Build-JDK8:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/cache@v4
+      - uses: actions/checkout@v7
+      - uses: actions/cache@v6
         env:
           cache-name: cache-m2-repository-${{ runner.os }}-jdk8-aarch64
         with:
@@ -125,7 +125,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pr-${{ env.cache-name }}-
             ${{ runner.os }}-pr-
-      - uses: uraimo/run-on-arch-action@v3.0.1
+      - uses: uraimo/run-on-arch-action@v3.2.0
         name: Run commands
         id: runcmd
         with:
@@ -155,7 +155,7 @@ jobs:
             ./mvnw -B --show-version -ntp clean package
 
       - name: Upload the build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Linux-Aarch64-Build-JDK8
           path: /home/runner/work/Brotli4j/
@@ -163,8 +163,8 @@ jobs:
   Linux-Aarch64-Build-JDK11:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/cache@v4
+      - uses: actions/checkout@v7
+      - uses: actions/cache@v6
         env:
           cache-name: cache-m2-repository-${{ runner.os }}-jdk11-aarch64
         with:
@@ -172,7 +172,7 @@ jobs:
           key: ${{ runner.os }}-pr-${{ env.cache-name }}-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-pr-${{ matrix.arch }}-pr-${{ env.cache-name }}-pr-
-      - uses: uraimo/run-on-arch-action@v3.0.1
+      - uses: uraimo/run-on-arch-action@v3.2.0
         name: Run commands
         id: runcmd
         with:
@@ -204,8 +204,8 @@ jobs:
   Linux-Aarch64-Build-JDK17:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/cache@v4
+      - uses: actions/checkout@v7
+      - uses: actions/cache@v6
         env:
           cache-name: cache-m2-repository-${{ runner.os }}-jdk17-aarch64
         with:
@@ -213,7 +213,7 @@ jobs:
           key: ${{ runner.os }}-pr-${{ env.cache-name }}-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-pr-${{ matrix.arch }}-pr-${{ env.cache-name }}-pr-
-      - uses: uraimo/run-on-arch-action@v3.0.1
+      - uses: uraimo/run-on-arch-action@v3.2.0
         name: Run commands
         id: runcmd
         with:
@@ -246,8 +246,8 @@ jobs:
   Linux-Aarch64-Build-JDK21:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/cache@v4
+      - uses: actions/checkout@v7
+      - uses: actions/cache@v6
         env:
           cache-name: cache-m2-repository-${{ runner.os }}-jdk21-aarch64
         with:
@@ -255,7 +255,7 @@ jobs:
           key: ${{ runner.os }}-pr-${{ env.cache-name }}-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-pr-${{ matrix.arch }}-pr-${{ env.cache-name }}-pr-
-      - uses: uraimo/run-on-arch-action@v3.0.1
+      - uses: uraimo/run-on-arch-action@v3.2.0
         name: Run commands
         id: runcmd
         with:
@@ -288,8 +288,8 @@ jobs:
   Linux-ArmV7-Build-JDK8:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/cache@v4
+      - uses: actions/checkout@v7
+      - uses: actions/cache@v6
         env:
           cache-name: cache-m2-repository-${{ runner.os }}-jdk8-arm7
         with:
@@ -297,7 +297,7 @@ jobs:
           key: ${{ runner.os }}-pr-${{ env.cache-name }}-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-pr-${{ matrix.arch }}-pr-${{ env.cache-name }}-pr-
-      - uses: uraimo/run-on-arch-action@v3.0.1
+      - uses: uraimo/run-on-arch-action@v3.2.0
         name: Run commands
         id: runcmd
         with:
@@ -327,7 +327,7 @@ jobs:
             ./mvnw -B --show-version -ntp clean package
 
       - name: Upload the build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Linux-ArmV7-Build-JDK8
           path: /home/runner/work/Brotli4j/
@@ -335,8 +335,8 @@ jobs:
   Linux-ArmV7-Build-JDK11:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/cache@v4
+      - uses: actions/checkout@v7
+      - uses: actions/cache@v6
         env:
           cache-name: cache-m2-repository-${{ runner.os }}-jdk11-armv7
         with:
@@ -344,7 +344,7 @@ jobs:
           key: ${{ runner.os }}-pr-${{ env.cache-name }}-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-pr-${{ matrix.arch }}-pr-${{ env.cache-name }}-pr-
-      - uses: uraimo/run-on-arch-action@v3.0.1
+      - uses: uraimo/run-on-arch-action@v3.2.0
         name: Run commands
         id: runcmd
         with:
@@ -376,8 +376,8 @@ jobs:
   Linux-ArmV7-Build-JDK17:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/cache@v4
+      - uses: actions/checkout@v7
+      - uses: actions/cache@v6
         env:
           cache-name: cache-m2-repository-${{ runner.os }}-jdk11-armv7
         with:
@@ -385,7 +385,7 @@ jobs:
           key: ${{ runner.os }}-pr-${{ env.cache-name }}-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-pr-${{ matrix.arch }}-pr-${{ env.cache-name }}-pr-
-      - uses: uraimo/run-on-arch-action@v3.0.1
+      - uses: uraimo/run-on-arch-action@v3.2.0
         name: Run commands
         id: runcmd
         with:
@@ -424,8 +424,8 @@ jobs:
   Linux-s390x-Build-JDK8:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/cache@v4
+      - uses: actions/checkout@v7
+      - uses: actions/cache@v6
         env:
           cache-name: cache-m2-repository-${{ runner.os }}-jdk8-s390x
         with:
@@ -433,7 +433,7 @@ jobs:
           key: ${{ runner.os }}-pr-${{ env.cache-name }}-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-pr-${{ matrix.arch }}-pr-${{ env.cache-name }}-pr-
-      - uses: uraimo/run-on-arch-action@v3.0.1
+      - uses: uraimo/run-on-arch-action@v3.2.0
         name: Run commands
         id: runcmd
         with:
@@ -459,7 +459,7 @@ jobs:
             ./mvnw -B --show-version -ntp clean package
 
       - name: Upload the build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Linux-s390x-Build-JDK8
           path: /home/runner/work/Brotli4j/
@@ -467,8 +467,8 @@ jobs:
   Linux-s390x-Build-JDK11:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/cache@v4
+      - uses: actions/checkout@v7
+      - uses: actions/cache@v6
         env:
           cache-name: cache-m2-repository-${{ runner.os }}-jdk8-s390x
         with:
@@ -476,7 +476,7 @@ jobs:
           key: ${{ runner.os }}-pr-${{ env.cache-name }}-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-pr-${{ matrix.arch }}-pr-${{ env.cache-name }}-pr-
-      - uses: uraimo/run-on-arch-action@v3.0.1
+      - uses: uraimo/run-on-arch-action@v3.2.0
         name: Run commands
         id: runcmd
         with:
@@ -509,8 +509,8 @@ jobs:
   Linux-ppc64le-Build-JDK8:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/cache@v4
+      - uses: actions/checkout@v7
+      - uses: actions/cache@v6
         env:
           cache-name: cache-m2-repository-${{ runner.os }}-jdk8-ppc64le
         with:
@@ -518,7 +518,7 @@ jobs:
           key: ${{ runner.os }}-pr-${{ env.cache-name }}-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-pr-${{ matrix.arch }}-pr-${{ env.cache-name }}-pr-
-      - uses: uraimo/run-on-arch-action@v3.0.1
+      - uses: uraimo/run-on-arch-action@v3.2.0
         name: Run commands
         id: runcmd
         with:
@@ -547,7 +547,7 @@ jobs:
             chmod +x ./mvnw
             ./mvnw -B -ntp clean package
       - name: Upload the build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Linux-ppc64le-Build-JDK8
           path: /home/runner/work/Brotli4j/
@@ -555,8 +555,8 @@ jobs:
   Linux-ppc64le-Build-JDK11:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/cache@v4
+      - uses: actions/checkout@v7
+      - uses: actions/cache@v6
         env:
           cache-name: cache-m2-repository-${{ runner.os }}-jdk11-ppc64le
         with:
@@ -564,7 +564,7 @@ jobs:
           key: ${{ runner.os }}-pr-${{ env.cache-name }}-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-pr-${{ matrix.arch }}-pr-${{ env.cache-name }}-pr-
-      - uses: uraimo/run-on-arch-action@v3.0.1
+      - uses: uraimo/run-on-arch-action@v3.2.0
         name: Run commands
         id: runcmd
         with:
@@ -596,8 +596,8 @@ jobs:
   Linux-riscv64-Build-JDK11:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/cache@v4
+      - uses: actions/checkout@v7
+      - uses: actions/cache@v6
         env:
           cache-name: cache-m2-repository-${{ runner.os }}-jdk11-riscv64
         with:
@@ -606,7 +606,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pr-${{ matrix.arch }}-pr-${{ env.cache-name }}-pr-
 
-      - uses: uraimo/run-on-arch-action@v3.0.1
+      - uses: uraimo/run-on-arch-action@v3.2.0
         name: Run commands
         id: runcmd
         with:
@@ -632,7 +632,7 @@ jobs:
             ./mvnw -B --show-version -ntp clean package
 
       - name: Upload the build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Linux-riscv64-Build-JDK11
           path: /home/runner/work/Brotli4j/
@@ -640,8 +640,8 @@ jobs:
   Linux-riscv64-Build-JDK17:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/cache@v4
+      - uses: actions/checkout@v7
+      - uses: actions/cache@v6
         env:
           cache-name: cache-m2-repository-${{ runner.os }}-jdk17-riscv64
         with:
@@ -649,7 +649,7 @@ jobs:
           key: ${{ runner.os }}-pr-${{ env.cache-name }}-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-pr-${{ matrix.arch }}-pr-${{ env.cache-name }}-pr-
-      - uses: uraimo/run-on-arch-action@v3.0.1
+      - uses: uraimo/run-on-arch-action@v3.2.0
         name: Run commands
         id: runcmd
         with:
@@ -682,8 +682,8 @@ jobs:
   Linux-riscv64-Build-JDK21:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/cache@v4
+      - uses: actions/checkout@v7
+      - uses: actions/cache@v6
         env:
           cache-name: cache-m2-repository-${{ runner.os }}-jdk21-riscv64
         with:
@@ -691,7 +691,7 @@ jobs:
           key: ${{ runner.os }}-pr-${{ env.cache-name }}-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-pr-${{ matrix.arch }}-pr-${{ env.cache-name }}-pr-
-      - uses: uraimo/run-on-arch-action@v3.0.1
+      - uses: uraimo/run-on-arch-action@v3.2.0
         name: Run commands
         id: runcmd
         with:
@@ -723,9 +723,9 @@ jobs:
   Windows-x86_64-Build-JDK8:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Set up JDK 8
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: 'corretto'
           java-version: 8
@@ -735,7 +735,7 @@ jobs:
       - name: Build with Maven
         run: mvn -B --show-version -ntp clean package --file pom.xml
       - name: Upload the build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Windows-x86_64-Build-JDK8
           path: D:\a\Brotli4j\
@@ -744,9 +744,9 @@ jobs:
   Windows-x86_64-Build-JDK11:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Set up JDK 11
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: 'corretto'
           java-version: 11
@@ -759,9 +759,9 @@ jobs:
   Windows-x86_64-Build-JDK17:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Set up JDK 17
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: 'corretto'
           java-version: 17
@@ -774,9 +774,9 @@ jobs:
   Windows-x86_64-Build-JDK21:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Set up JDK 21
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: 'corretto'
           java-version: 21
@@ -789,7 +789,7 @@ jobs:
   Windows-ARM-Build-JDK8:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Install ARM64 MSVC Build Tools
         run: |
           choco install visualstudio2022buildtools --no-progress --yes --limit-output
@@ -800,7 +800,7 @@ jobs:
         with:
           arch: amd64_arm64
       - name: Set up JDK 8
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: 'corretto'
           java-version: 8
@@ -814,7 +814,7 @@ jobs:
           dumpbin /headers "natives\windows-aarch64\target\classes\lib\windows-aarch64\brotli.dll" | findstr /C:"machine (ARM64)" || exit /b 1
         shell: cmd
       - name: Upload the build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: Windows-ARM-Build-JDK8
           path: D:\a\Brotli4j\
@@ -833,9 +833,9 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && inputs.do_release == true
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Download all build artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           path: release-bundle
       - name: Merge all build artifacts into one directory
@@ -856,7 +856,7 @@ jobs:
           mkdir natives/osx-aarch64/target
           cp -r release-bundle/MacOS-x86_64-Build-JDK8/Brotli4j/natives/osx-aarch64/target/ natives/osx-aarch64/target
       - name: Set up JDK 8 for deploy
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: 'corretto'
           java-version: 8
@@ -873,7 +873,7 @@ jobs:
               "password": "${{ secrets.OSSRH_PASSWORD }}"
             }]
       - name: Import GPG
-        uses: crazy-max/ghaction-import-gpg@v6.3.0
+        uses: crazy-max/ghaction-import-gpg@v7.0.0
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
